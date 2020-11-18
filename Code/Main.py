@@ -27,19 +27,20 @@ print("### QUESTION 1 ###")
 ## Data cleaning functions
 def CleanData(data):
     #the following columns are not needed
-    data.drop(['ISO_N3', 'ISO_C3'], axis=1, inplace=True)
+    data = data.drop(['ISO_N3', 'ISO_C3'], axis=1)
 
     #fix missing data and convert to correct data type
-    data['AgriculturalLand']= data['AgriculturalLand'].replace('..', np.nan)
-    data['CropProductionIndex']= data['CropProductionIndex'].replace('..', np.nan) 
+    data['AgriculturalLand'] = data['AgriculturalLand'].replace('..', np.nan)
+    data['CropProductionIndex'] = data['CropProductionIndex'].replace('..', np.nan) 
     data['AgriculturalLand'] = pd.to_numeric(data['AgriculturalLand'])
     data['CropProductionIndex'] = pd.to_numeric(data['CropProductionIndex'])
     print(data.dtypes)
+    return data
 
 ## Data transformation functions
 def AddFirstDifferencesColumns(data):
     dataFirstDifferences = data.diff()
-    dataFirstDifferences.drop('Year', axis=1, inplace=True)
+    dataFirstDifferences = dataFirstDifferences.drop('Year', axis=1)
     dataFirstDifferences.columns = dataFirstDifferences.columns + 'Delta'
     return pd.concat([data, dataFirstDifferences], axis=1)
 
@@ -88,13 +89,14 @@ def CreatePlots(data, country, columnDescription, showFigures=True, export=False
             CreatePlot(data['Year'], data[column], 'Year', columnDescription, country + ' - ' + column, showFigures, export, exportFolder)
 
 ## START OF CODE
-# Clean data
-CleanData(data)
-
 #Create outputs per country
 for country in data['Country'].unique():
+    print('### Creating results for country: ' + country)
     dataCountry = data[data['Country'] == country].drop('Country', axis=1)
+
+    dataCountry = CleanData(dataCountry)
     dataCountry = AddFirstDifferencesColumns(dataCountry)
+
     #Create outputs
     CreateCorrPlot(dataCountry, country + ' Correlation Plot', showFigures, exportPlots, exportFolder)
     CreatePlots(dataCountry, country, columnDescriptions, showFigures, exportPlots, exportFolder)
