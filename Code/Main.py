@@ -28,14 +28,12 @@ def CleanData(data):
     #the following columns are not needed
     data.drop(['ISO_N3', 'ISO_C3'], axis=1, inplace=True)
 
-    #ToDo: Cleaning Code from Maha, somehow I cannot get it to work, fix!
-    #column_names = data.columns
-    #data_population = data['Population']
-    #data = data.stack().str.replace(',', '.').unstack()
-    #data['Population'] = data_population
-    #data = data.stack().replace('..', float('NaN')).unstack()
-    #data_list = [pd.to_numeric(data[column_names[i]]) for i in range(len(column_names))]
-    #data = pd.concat(data_list, axis=1)
+    #fix missing data and convert to correct data type
+    data['AgriculturalLand']= data['AgriculturalLand'].replace('..', np.nan)
+    data['CropProductionIndex']= data['CropProductionIndex'].replace('..', np.nan) 
+    data['AgriculturalLand'] = pd.to_numeric(data['AgriculturalLand'])#, downcast="float")
+    data['CropProductionIndex'] = pd.to_numeric(data['CropProductionIndex'])#, downcast="float")
+    print(data.dtypes)
 
 ## Graph functions
 # Creates a correlation plot of all columns in dataframe
