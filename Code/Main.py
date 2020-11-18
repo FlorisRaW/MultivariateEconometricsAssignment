@@ -34,17 +34,33 @@ def CleanData(data):
     data['CropProductionIndex'] = data['CropProductionIndex'].replace('..', np.nan) 
     data['AgriculturalLand'] = pd.to_numeric(data['AgriculturalLand'])
     data['CropProductionIndex'] = pd.to_numeric(data['CropProductionIndex'])
-    print(data.dtypes)
+    #print(data.dtypes)
     return data
 
 ## Data transformation functions
-def AddFirstDifferencesColumns(data):
-    dataFirstDifferences = data.diff()
-    dataFirstDifferences = dataFirstDifferences.drop('Year', axis=1)
-    dataFirstDifferences.columns = dataFirstDifferences.columns + 'Delta'
-    return pd.concat([data, dataFirstDifferences], axis=1)
+def TransformData(data):
+    dataFirstDifferences = CalculateFirstDifferences(data)
+    dataPercentageChange = CalculatePercentageChange(data)
+
+    return pd.concat([data, dataFirstDifferences, dataPercentageChange], axis = 1)
+
+def CalculateFirstDifferences(data):
+    dataTransformed = data.diff()
+    dataTransformed = dataTransformed.drop('Year', axis=1)
+    dataTransformed.columns = dataTransformed.columns + 'DeltaAbs'
+    return dataTransformed
+
+def CalculatePercentageChange(data):
+    dataTransformed = data.pct_change()
+    dataTransformed = dataTransformed.drop('Year', axis=1)
+    dataTransformed.columns = dataTransformed.columns + 'DeltaRel'
+    return dataTransformed
 
 ## Graph functions
+def CreatePlots(data, country, columnDescriptions, showFigures=True, export=False, exportFolder=''):
+    CreateCorrPlot(data, country + ' Correlation Plot', showFigures, exportPlots, exportFolder)
+    CreateLinePlots(data, country, columnDescriptions, showFigures, exportPlots, exportFolder)
+
 # Creates a correlation plot of all columns in dataframe
 def CreateCorrPlot(data, title, showFigure=True, export=False, exportFolder=''):
     corr = data.corr()
@@ -67,7 +83,7 @@ def CreateCorrPlot(data, title, showFigure=True, export=False, exportFolder=''):
         plt.clf()
 
 # Creates a simple x y plot
-def CreatePlot(x, y, xLabel, yLabel, title, showFigure=True, export=False, exportFolder=''):
+def CreateLinePlot(x, y, xLabel, yLabel, title, showFigure=True, export=False, exportFolder=''):
     plt.plot(x, y)
     plt.xlabel(xLabel)
     plt.ylabel(yLabel)
@@ -79,14 +95,14 @@ def CreatePlot(x, y, xLabel, yLabel, title, showFigure=True, export=False, expor
         plt.clf()
 
 # Creates a plot for each column in a dataframe (except country, year) with the column 'Year' as the x-axis
-def CreatePlots(data, country, columnDescription, showFigures=True, export=False, exportFolder=''):
+def CreateLinePlots(data, country, columnDescription, showFigures=True, export=False, exportFolder=''):
     for column in data.columns:
         if column not in ['Country', 'Year']:
             if column in columnDescriptions:
                 columnDescription = columnDescriptions[column]
             else:
                 columnDescription = column
-            CreatePlot(data['Year'], data[column], 'Year', columnDescription, country + ' - ' + column, showFigures, export, exportFolder)
+            CreateLinePlot(data['Year'], data[column], 'Year', columnDescription, country + ' - ' + column, showFigures, export, exportFolder)
 
 ## START OF CODE
 #Create outputs per country
@@ -94,9 +110,11 @@ for country in data['Country'].unique():
     print('### Creating results for country: ' + country)
     dataCountry = data[data['Country'] == country].drop('Country', axis=1)
 
+    #Clean data
     dataCountry = CleanData(dataCountry)
-    dataCountry = AddFirstDifferencesColumns(dataCountry)
+
+    #Transform data
+    dataCountry = TransformData(dataCountry)
 
     #Create outputs
-    CreateCorrPlot(dataCountry, country + ' Correlation Plot', showFigures, exportPlots, exportFolder)
     CreatePlots(dataCountry, country, columnDescriptions, showFigures, exportPlots, exportFolder)
