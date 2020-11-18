@@ -85,4 +85,4 @@ for country in data['Country'].unique():
 
     #Create outputs
     CreateCorrPlot(dataCountry, country + ' Correlation Plot', exportPlots, exportFolder)
-    CreatePlots(dataCountry, country, exportPlots, exportFolder)
+    CreatePlots(dataCountry, country, columnDescriptions, exportPlots, exportFolder)
